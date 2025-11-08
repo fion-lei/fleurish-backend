@@ -29,3 +29,25 @@ exports.getPoints = async (req, res) => {
     });
   }
 };
+
+
+exports.createUser = async (req, res) => {
+  try {
+    const {  email } = req.body;
+    const newUser = new User({
+      userId: generateUniqueId(), // Assume a function to generate unique IDs
+      email,
+      gems: 0,
+      coins: 0
+    });
+    await newUser.save();
+    res.status(201).json({
+      success: true,
+      data: newUser
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }};
