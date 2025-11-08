@@ -1,5 +1,23 @@
 const User = require('../models/User');
 
+// @desc    Generate a unique user ID
+// @access  Private
+const generateUniqueId = async () => {
+  const prefix = 'U'; // U for User
+  const timestamp = Date.now().toString(36); // Convert timestamp to base36
+  const randomStr = Math.random().toString(36).substr(2, 5); // 5 random chars
+  const proposedId = `${prefix}${timestamp}${randomStr}`.toUpperCase();
+  
+  // Check if ID already exists
+  const existingUser = await User.findOne({ userId: proposedId });
+  if (existingUser) {
+    // If ID exists, try again recursively
+    return generateUniqueId();
+  }
+  
+  return proposedId;
+};
+
 // @desc    Get user points (gems and coins)
 // @route   GET /api/users/:userId/points
 // @access  Public
