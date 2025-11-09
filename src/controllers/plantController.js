@@ -1,21 +1,18 @@
-const mongoose = require('mongoose');
-const Plant = require('../models/Plant');
-const User = require('../models/User');
-const Garden = require('../models/Garden');
-const Plot = require('../models/Plot');
+const mongoose = require("mongoose");
+const Plant = require("../models/Plant");
+const User = require("../models/User");
+const Garden = require("../models/Garden");
+const Plot = require("../models/Plot");
 
-const { Types } = require('mongoose');
+const { Types } = require("mongoose");
 
 // Internal helper to create a plant
-const createPlantInternal = async (
-  { growth = 0, plantType, userId, isPlanted = false },
-  session = null
-) => {
+const createPlantInternal = async ({ growth = 0, plantType, userId, isPlanted = false }, session = null) => {
   const doc = {
     growth,
     plantType,
     userId,
-    isPlanted
+    isPlanted,
   };
 
   const options = session ? { session } : {};
@@ -31,14 +28,14 @@ exports.createPlant = async (req, res) => {
     if (!plantTypeId) {
       return res.status(400).json({
         success: false,
-        error: 'plantTypeId is required'
+        error: "plantTypeId is required",
       });
     }
 
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'userId is required'
+        error: "userId is required",
       });
     }
 
@@ -46,7 +43,7 @@ exports.createPlant = async (req, res) => {
       growth,
       plantType: plantTypeId,
       userId,
-      isPlanted: isPlanted ?? false
+      isPlanted: isPlanted ?? false,
     });
 
     const out = plant.toObject();
@@ -54,12 +51,11 @@ exports.createPlant = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      data: out
+      data: out,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: error.message
       error: error.message,
     });
   }
