@@ -28,6 +28,21 @@ exports.getPlantType = async (req, res) => {
   }
 };
 
+// Get all plant types
+exports.getAllPlantTypes = async (req, res) => {
+  try {
+    const plantTypes = await PlantType.find({});
+    const data = plantTypes.map((pt) => {
+      const out = pt.toObject();
+      out.plantTypeMongoId = out._id;
+      return out;
+    });
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 // Update plant type
 exports.updatePlantType = async (req, res) => {
   try {

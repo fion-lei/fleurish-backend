@@ -1,21 +1,18 @@
-const mongoose = require('mongoose');
-const Plant = require('../models/Plant');
-const User = require('../models/User');
-const Garden = require('../models/Garden');
-const Plot = require('../models/Plot');
+const mongoose = require("mongoose");
+const Plant = require("../models/Plant");
+const User = require("../models/User");
+const Garden = require("../models/Garden");
+const Plot = require("../models/Plot");
 
-const { Types } = require('mongoose');
+const { Types } = require("mongoose");
 
 // Internal helper to create a plant
-const createPlantInternal = async (
-  { growth = 0, plantType, userId, isPlanted = false },
-  session = null
-) => {
+const createPlantInternal = async ({ growth = 0, plantType, userId, isPlanted = false }, session = null) => {
   const doc = {
     growth,
     plantType,
     userId,
-    isPlanted
+    isPlanted,
   };
 
   const options = session ? { session } : {};
@@ -31,14 +28,14 @@ exports.createPlant = async (req, res) => {
     if (!plantTypeId) {
       return res.status(400).json({
         success: false,
-        error: 'plantTypeId is required'
+        error: "plantTypeId is required",
       });
     }
 
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'userId is required'
+        error: "userId is required",
       });
     }
 
@@ -46,7 +43,7 @@ exports.createPlant = async (req, res) => {
       growth,
       plantType: plantTypeId,
       userId,
-      isPlanted: isPlanted ?? false
+      isPlanted: isPlanted ?? false,
     });
 
     const out = plant.toObject();
@@ -54,12 +51,12 @@ exports.createPlant = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      data: out
+      data: out,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -67,14 +64,12 @@ exports.createPlant = async (req, res) => {
 // Get plant by id
 exports.getPlant = async (req, res) => {
   try {
-    const plant = await Plant.findById(req.params.plantId)
-      .populate('plantType')
-      .populate('userId', 'email');
+    const plant = await Plant.findById(req.params.plantId).populate("plantType").populate("userId", "email");
 
     if (!plant) {
       return res.status(404).json({
         success: false,
-        error: 'Plant not found'
+        error: "Plant not found",
       });
     }
 
@@ -83,12 +78,52 @@ exports.getPlant = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: out
+      data: out,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+    });
+  }
+};
+
+// Get plants by userId with optional isPlanted filter
+exports.getUserPlants = async (req, res) => {
+  try {
+    const { userId, isPlanted } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: "userId is required",
+      });
+    }
+
+    const query = { userId };
+
+    // Add isPlanted filter if provided
+    if (isPlanted !== undefined) {
+      query.isPlanted = isPlanted === "true";
+    }
+
+    const plants = await Plant.find(query).populate("plantType").populate("userId", "email");
+
+    const plantsWithId = plants.map((plant) => {
+      const out = plant.toObject();
+      out.plantId = out._id;
+      return out;
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: plantsWithId.length,
+      data: plantsWithId,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message,
     });
   }
 };
@@ -103,18 +138,12 @@ exports.updatePlant = async (req, res) => {
     if (req.body.isPlanted !== undefined) updates.isPlanted = req.body.isPlanted;
     if (req.body.userId !== undefined) updates.userId = req.body.userId;
 
-    const plant = await Plant.findByIdAndUpdate(
-      req.params.plantId,
-      updates,
-      { new: true }
-    )
-      .populate('plantType')
-      .populate('userId', 'email');
+    const plant = await Plant.findByIdAndUpdate(req.params.plantId, updates, { new: true }).populate("plantType").populate("userId", "email");
 
     if (!plant) {
       return res.status(404).json({
         success: false,
-        error: 'Plant not found'
+        error: "Plant not found",
       });
     }
 
@@ -123,12 +152,12 @@ exports.updatePlant = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: out
+      data: out,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -146,7 +175,7 @@ exports.plantInNextAvailablePlot = async (req, res) => {
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'userId and plantId are required'
+        error: "userId and plantId are required",
       });
     }
 
@@ -157,7 +186,7 @@ exports.plantInNextAvailablePlot = async (req, res) => {
       session.endSession();
       return res.status(404).json({
         success: false,
-        error: 'User or garden not found'
+        error: "User or garden not found",
       });
     }
 
@@ -168,7 +197,7 @@ exports.plantInNextAvailablePlot = async (req, res) => {
       session.endSession();
       return res.status(404).json({
         success: false,
-        error: 'Plant not found'
+        error: "Plant not found",
       });
     }
 
@@ -178,7 +207,7 @@ exports.plantInNextAvailablePlot = async (req, res) => {
       session.endSession();
       return res.status(403).json({
         success: false,
-        error: 'Plant does not belong to this user'
+        error: "Plant does not belong to this user",
       });
     }
 
@@ -188,26 +217,24 @@ exports.plantInNextAvailablePlot = async (req, res) => {
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'Plant is already planted'
+        error: "Plant is already planted",
       });
     }
 
     // Load garden with plots
-    const garden = await Garden.findById(user.gardenId)
-      .populate('plots')
-      .session(session);
+    const garden = await Garden.findById(user.gardenId).populate("plots").session(session);
 
     if (!garden) {
       await session.abortTransaction();
       session.endSession();
       return res.status(404).json({
         success: false,
-        error: 'Garden not found'
+        error: "Garden not found",
       });
     }
 
     // Find first available plot (no plant)
-    const availablePlot = garden.plots.find(p => !p.plant);
+    const availablePlot = garden.plots.find((p) => !p.plant);
 
     // If no available plot, cannot plant
     if (!availablePlot) {
@@ -215,7 +242,7 @@ exports.plantInNextAvailablePlot = async (req, res) => {
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'No available plots in garden'
+        error: "No available plots in garden",
       });
     }
 
@@ -240,17 +267,17 @@ exports.plantInNextAvailablePlot = async (req, res) => {
           plotId: availablePlot._id,
           row: availablePlot.row,
           column: availablePlot.column,
-          plant: availablePlot.plant
+          plant: availablePlot.plant,
         },
-        gardenId: garden._id
-      }
+        gardenId: garden._id,
+      },
     });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -268,7 +295,7 @@ exports.removePlantFromPlot = async (req, res) => {
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'userId and plantId are required'
+        error: "userId and plantId are required",
       });
     }
 
@@ -278,7 +305,7 @@ exports.removePlantFromPlot = async (req, res) => {
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'Invalid plantId format'
+        error: "Invalid plantId format",
       });
     }
 
@@ -287,7 +314,7 @@ exports.removePlantFromPlot = async (req, res) => {
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'Invalid userId format'
+        error: "Invalid userId format",
       });
     }
 
@@ -299,7 +326,7 @@ exports.removePlantFromPlot = async (req, res) => {
       session.endSession();
       return res.status(404).json({
         success: false,
-        error: `Plant not found for id ${plantId}`
+        error: `Plant not found for id ${plantId}`,
       });
     }
 
@@ -309,7 +336,7 @@ exports.removePlantFromPlot = async (req, res) => {
       session.endSession();
       return res.status(403).json({
         success: false,
-        error: 'Plant does not belong to this user'
+        error: "Plant does not belong to this user",
       });
     }
 
@@ -319,7 +346,7 @@ exports.removePlantFromPlot = async (req, res) => {
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'Plant is not eligible to be removed from plot (must have growth = 2 and be planted)'
+        error: "Plant is not eligible to be removed from plot (must have growth = 2 and be planted)",
       });
     }
 
@@ -331,7 +358,7 @@ exports.removePlantFromPlot = async (req, res) => {
       session.endSession();
       return res.status(404).json({
         success: false,
-        error: 'No plot is associated with this plant'
+        error: "No plot is associated with this plant",
       });
     }
 
@@ -357,16 +384,16 @@ exports.removePlantFromPlot = async (req, res) => {
           plotId: plot._id,
           row: plot.row,
           column: plot.column,
-          plant: plot.plant // null
-        }
-      }
+          plant: plot.plant, // null
+        },
+      },
     });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 };
