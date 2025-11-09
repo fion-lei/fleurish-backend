@@ -24,36 +24,28 @@ const taskSchema = new mongoose.Schema({
     default: 'pending'
   },
 
-  requestID: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
+  // User who requested the task
+  requestUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
 
   // User who completed the task (null until completed)
-  completedUserID: {
+  completedUserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: null
   },
 
   // Community this task belongs to
-  communityID: {
+  communityId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Community',
     required: true
   }
 }, {
   timestamps: true
-});
-
-// Auto-generate requestID if not provided
-taskSchema.pre('validate', function (next) {
-  if (!this.requestID) {
-    this.requestID = `REQ_${new mongoose.Types.ObjectId().toString()}`;
-  }
-  next();
 });
 
 module.exports = mongoose.model('Task', taskSchema);
