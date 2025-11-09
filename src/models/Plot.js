@@ -1,21 +1,27 @@
+// src/models/Plot.js
 const mongoose = require('mongoose');
 
-const plotSchema = new mongoose.Schema({
-  row: {
-    type: Number,
-    required: [true, 'Row is required']
+const plotSchema = new mongoose.Schema(
+  {
+    row: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    column: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    plant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Plant',
+      default: null
+    }
   },
-  column: {
-    type: Number,
-    required: [true, 'Column is required']
-  },
-  plant: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'plants',
-    default: null
+  {
+    timestamps: false
   }
-}, { 
-  versionKey: false  // This removes the __v field
-});
+);
 
 module.exports = mongoose.model('Plot', plotSchema);
