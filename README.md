@@ -2,6 +2,11 @@
 
 A Node.js/Express backend API for fleurish, providing endpoints for managing users, gardens, plots, plants, communities, and growth tracking.
 
+## Related Repositories
+
+- [Frontend](https://github.com/fion-lei/fleurish)
+- [Hardware/Processing](https://github.com/ryanwoong/fleurish-hardware)
+
 ## 🚀 Features
 
 - User authentication and management
