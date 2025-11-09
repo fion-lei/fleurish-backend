@@ -15,7 +15,7 @@ const plotSchema = new mongoose.Schema({
     default: null
   }
 }, { 
-  versionKey: false  // This removes the __v field
+  versionKey: false 
 });
 
 module.exports = mongoose.model('Plot', plotSchema);
