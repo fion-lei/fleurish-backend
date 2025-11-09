@@ -1,52 +1,68 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
+const Garden = require('../models/Garden');
+const Inventory = require('../models/Inventory');
 
-// @desc    Get user points (gems and coins)
-// @route   GET /api/users/:userId/points
-// @access  Public
-exports.getPoints = async (req, res) => {
+exports.createUser = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const user = await User.findOne({ userId: req.params.userId });
-    
-    if (!user) {
-      return res.status(404).json({
+    const { email } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email }).session(session);
+    if (existingUser) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
         success: false,
-        error: 'User not found'
+        error: 'User with this email already exists'
       });
     }
 
-    res.status(200).json({
+    // Create Garden
+    const [garden] = await Garden.create(
+      [{ plots: [] }],
+      { session }
+    );
+
+    // Create Inventory
+    const [inventory] = await Inventory.create(
+      [{ seedArray: [], harvestArray: [] }],
+      { session }
+    );
+
+    // new user 
+    const [newUser] = await User.create(
+      [{
+        email,
+        gems: 0,
+        coins: 0,
+        gardenId: garden._id,
+        inventoryId: inventory._id
+      }],
+      { session }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
       success: true,
       data: {
-        userId: user.userId,
-        gems: user.gems,
-        coins: user.coins
+        user: newUser,
+        garden,
+        inventory
       }
     });
   } catch (error) {
-    res.status(500).json({
+    await session.abortTransaction();
+    session.endSession();
+
+    return res.status(500).json({
       success: false,
       error: error.message
     });
   }
 };
-
-
-exports.createUser = async (req, res) => {
-  try {
-    const {  email } = req.body;
-    const newUser = new User({
-      email,
-      gems: 0,
-      coins: 0
-    });
-    await newUser.save();
-    res.status(201).json({
-      success: true,
-      data: newUser
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }};

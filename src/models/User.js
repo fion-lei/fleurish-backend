@@ -1,17 +1,18 @@
+// models/User.js
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
   gardenId: {
-    type: String,
-    trim: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Garden'
   },
   communityId: {
     type: String,
     trim: true
   },
   inventoryId: {
-    type: String,
-    trim: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Inventory'
   },
   email: {
     type: String,
