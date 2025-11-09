@@ -18,11 +18,14 @@ exports.getGarden = async (req, res) => {
   }
 };
 
-// Add an existing plot to a garden by passing { plotId: '<mongoId>' } in body
+
 exports.addPlot = async (req, res) => {
   try {
-    const { plotId } = req.body;
-    if (!plotId) return res.status(400).json({ success: false, error: 'plotId is required' });
+
+    const rawPlotId = req.body?.plotId ?? req.query?.plotId;
+    if (!rawPlotId) return res.status(400).json({ success: false, error: 'plotId is required (in body or query)' });
+
+    const plotId = String(rawPlotId).trim().replace(/^"+|"+$/g, '');
 
     const plot = await Plot.findById(plotId);
     if (!plot) return res.status(404).json({ success: false, error: 'Plot not found' });
@@ -30,7 +33,6 @@ exports.addPlot = async (req, res) => {
     const garden = await Garden.findById(req.params.gardenId);
     if (!garden) return res.status(404).json({ success: false, error: 'Garden not found' });
 
-    // prevent duplicates
     if (!garden.plots.includes(plot._id)) {
       garden.plots.push(plot._id);
       await garden.save();
