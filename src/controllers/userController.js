@@ -5,7 +5,6 @@ const Garden = require('../models/Garden');
 const Plot = require('../models/Plot');
 const Plant = require('../models/Plant');
 
-// Auth middleware - protect routes
 const protect = async (req, res, next) => {
   let token;
 
@@ -44,9 +43,6 @@ const protect = async (req, res, next) => {
 
 exports.protect = protect;
 
-// @desc    Register a new user
-// @route   POST /api/users/register
-// @access  Public
 exports.register = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -139,9 +135,6 @@ exports.register = async (req, res) => {
   }
 };
 
-// @desc    Login user
-// @route   POST /api/users/login
-// @access  Public
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -196,9 +189,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// @desc    Get current logged in user
-// @route   GET /api/users/me
-// @access  Private
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
@@ -240,89 +230,207 @@ exports.getMe = async (req, res) => {
   }
 };
 
-exports.createUser = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+// coin management
 
+exports.addCoins = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { userId, amount } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email }).session(session);
-    if (existingUser) {
-      await session.abortTransaction();
-      session.endSession();
+    if (!userId || amount === undefined) {
       return res.status(400).json({
         success: false,
-        error: 'User with this email already exists'
+        error: 'userId and amount are required'
       });
     }
 
-    // create initial plot
-    const [plot] = await Plot.create(
-      [
-        {
-          row: 0,
-          column: 0,
-          plant: null
-        }
-      ],
-      { session }
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount must be greater than 0'
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $inc: { coins: amount } },
+      { new: true }
     );
 
-    // Create Garden with this plot
-    const [garden] = await Garden.create(
-      [
-        {
-          plots: [plot._id]
-        }
-      ],
-      { session }
-    );
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
 
-    // Create User referencing Garden
-    const [newUser] = await User.create(
-      [
-        {
-          email,
-          gems: 0,
-          coins: 0,
-          gardenId: garden._id,
-        }
-      ],
-      { session }
-    );
-
-    await session.commitTransaction();
-    session.endSession();
-
-    const userOut = newUser.toObject();
-    userOut.userId = userOut._id;
-
-    const gardenOut = garden.toObject();
-    gardenOut.gardenId = gardenOut._id;
-
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       data: {
-        user: {
-          userId: userOut.userId,
-          email: userOut.email,
-          gems: userOut.gems,
-          coins: userOut.coins
-        },
-        garden: gardenOut,
+        userId: user._id,
+        coins: user.coins
       }
     });
   } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-    session.endSession();
-
+    console.error('addCoins error:', error);
     return res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Error adding coins',
+      message: error.message
+    });
+  }
+};
+
+// Remove coins
+// POST /api/users/coins/remove
+// Body: { userId, amount }
+exports.removeCoins = async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+
+    if (!userId || amount === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId and amount are required'
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount must be greater than 0'
+      });
+    }
+
+    // Atomic: only update if user has enough coins
+    const user = await User.findOneAndUpdate(
+      { _id: userId, coins: { $gte: amount } },
+      { $inc: { coins: -amount } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: 'User not found or insufficient coins'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        userId: user._id,
+        coins: user.coins
+      }
+    });
+  } catch (error) {
+    console.error('removeCoins error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Error removing coins',
+      message: error.message
+    });
+  }
+};
+
+// Add gems
+// POST /api/users/gems/add
+// Body: { userId, amount }
+exports.addGems = async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+
+    if (!userId || amount === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId and amount are required'
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount must be greater than 0'
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $inc: { gems: amount } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        userId: user._id,
+        gems: user.gems
+      }
+    });
+  } catch (error) {
+    console.error('addGems error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Error adding gems',
+      message: error.message
+    });
+  }
+};
+
+// Remove gems
+// POST /api/users/gems/remove
+// Body: { userId, amount }
+exports.removeGems = async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+
+    if (!userId || amount === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId and amount are required'
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount must be greater than 0'
+      });
+    }
+
+    // Atomic: only update if user has enough gems
+    const user = await User.findOneAndUpdate(
+      { _id: userId, gems: { $gte: amount } },
+      { $inc: { gems: -amount } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: 'User not found or insufficient gems'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        userId: user._id,
+        gems: user.gems
+      }
+    });
+  } catch (error) {
+    console.error('removeGems error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Error removing gems',
+      message: error.message
     });
   }
 };
