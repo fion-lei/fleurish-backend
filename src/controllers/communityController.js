@@ -169,6 +169,43 @@ exports.getCommunityById = async (req, res) => {
   }
 };
 
+// GET community name by ID
+// POST /api/communities/name
+// Body: { communityId }
+exports.getCommunityName = async (req, res) => {
+  try {
+    const { communityId } = req.body;
+
+    if (!communityId) {
+      return res.status(400).json({
+        success: false,
+        error: 'communityId is required'
+      });
+    }
+
+    const community = await Community.findById(communityId, 'communityName');
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        error: 'Community not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        communityId: community._id,
+        communityName: community.communityName
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 // UPDATE communityPoints (set to a new value)
 exports.updateCommunityPoints = async (req, res) => {
   try {
