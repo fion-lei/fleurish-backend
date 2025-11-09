@@ -4,7 +4,7 @@ const User = require('../models/User');
 const Garden = require('../models/Garden');
 const Plot = require('../models/Plot');
 
-// Internal helper to create a plant (reusable, session-aware)
+// Internal helper to create a plant
 const createPlantInternal = async (
   { growth = 0, plantType, userId, isPlanted = false },
   session = null

@@ -1,4 +1,3 @@
-// src/models/Plot.js
 const mongoose = require('mongoose');
 
 const plotSchema = new mongoose.Schema(
