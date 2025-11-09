@@ -5,6 +5,7 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      dbName: 'fleurishDB'
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
