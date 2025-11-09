@@ -19,10 +19,13 @@ exports.createPlot = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Row and column must be valid numbers' });
     }
 
-    // Remove any extra quotes from plantId
-    const cleanPlantId = plantId ? plantId.replace(/['"]+/g, '') : plantId;
-    const plot = await createPlotInternal({ row: numRow, column: numColumn, plantId: cleanPlantId });
-    res.status(201).json({ success: true, data: plot });
+  // Clean plant id if provided
+  const cleanPlant = plantId ? String(plantId).replace(/['"]+/g, '') : plantId;
+  const plot = await createPlotInternal({ row: numRow, column: numColumn, plantId: cleanPlant });
+    await plot.populate({ path: 'plant', populate: { path: 'plantType' } });
+    const out = plot.toObject();
+    out.plotId = out._id;
+    res.status(201).json({ success: true, data: out });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -31,9 +34,11 @@ exports.createPlot = async (req, res) => {
 // Express route handler: get plot by MongoDB _id
 exports.getPlot = async (req, res) => {
   try {
-    const plot = await Plot.findById(req.params.plotId);
+  const plot = await Plot.findById(req.params.plotId).populate({ path: 'plant', populate: { path: 'plantType' } });
     if (!plot) return res.status(404).json({ success: false, error: 'Plot not found' });
-    res.status(200).json({ success: true, data: plot });
+    const out = plot.toObject();
+    out.plotId = out._id;
+    res.status(200).json({ success: true, data: out });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -44,12 +49,13 @@ exports.updatePlot = async (req, res) => {
   try {
     const updates = {};
     ['row', 'column', 'plantId'].forEach((k) => {
-      if (req.body[k] !== undefined) updates[k] = req.body[k];
+      if (req.body[k] !== undefined) updates[k === 'plantId' ? 'plant' : k] = req.body[k];
     });
-
-  const plot = await Plot.findByIdAndUpdate(req.params.plotId, updates, { new: true });
+  const plot = await Plot.findByIdAndUpdate(req.params.plotId, updates, { new: true }).populate({ path: 'plant', populate: { path: 'plantType' } });
     if (!plot) return res.status(404).json({ success: false, error: 'Plot not found' });
-    res.status(200).json({ success: true, data: plot });
+    const out = plot.toObject();
+    out.plotId = out._id;
+    res.status(200).json({ success: true, data: out });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

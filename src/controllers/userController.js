@@ -48,12 +48,24 @@ exports.createUser = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
+    const userOut = newUser.toObject();
+    userOut.userId = userOut._id;
+    const gardenOut = garden.toObject();
+    gardenOut.gardenId = gardenOut._id;
+    const inventoryOut = inventory.toObject();
+    inventoryOut.inventoryId = inventoryOut._id;
+
     return res.status(201).json({
       success: true,
       data: {
-        user: newUser,
-        garden,
-        inventory
+        user: {
+          userId: userOut.userId,
+          email: userOut.email,
+          gems: userOut.gems,
+          coins: userOut.coins
+        },
+        garden: gardenOut,
+        inventory: inventoryOut
       }
     });
   } catch (error) {

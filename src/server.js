@@ -16,7 +16,10 @@ connectDB();
 
 // Routes
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/gardens', require('./routes/gardenRoutes'));
 app.use('/api/plots', require('./routes/plotRoutes'));
+app.use('/api/plants', require('./routes/plantRoutes'));
+app.use('/api/plant-types', require('./routes/plantTypeRoutes'));
 
 // Health check route
 app.get('/health', (req, res) => {
