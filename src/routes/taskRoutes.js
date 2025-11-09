@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { createTask, getTaskById, updateTask, completeTask, getTasksByCommunity } = require("../controllers/taskController");
+const { createTask, getTaskById, updateTask, completeTask, getTasksByCommunity, getTasksByUserId } = require("../controllers/taskController");
 
 // Task CRUD routes
 router.post("/", createTask);
 router.get("/community/:communityId", getTasksByCommunity);
+router.get("/user/:userId", getTasksByUserId);
 router.get("/:id", getTaskById);
 router.put("/:id", updateTask);
 

@@ -72,6 +72,41 @@ exports.getTasksByCommunity = async (req, res) => {
   }
 };
 
+// Get all tasks by user ID (requested or completed by the user)
+exports.getTasksByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid user ID",
+      });
+    }
+
+    // Find tasks where the user is either the requester or the completer
+    const tasks = await Task.find({
+      $or: [{ requestUserId: userId }, { completedUserId: userId }],
+    })
+      .populate("requestUserId", "email")
+      .populate("completedUserId", "email")
+      .populate("communityId", "name")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: tasks.length,
+      data: tasks,
+    });
+  } catch (error) {
+    console.error("Error fetching tasks by user:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to fetch tasks",
+    });
+  }
+};
+
 // Get a single task by ID
 exports.getTaskById = async (req, res) => {
   try {
