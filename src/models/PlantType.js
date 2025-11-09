@@ -1,14 +1,11 @@
 const mongoose = require('mongoose');
 
 const plantTypeSchema = new mongoose.Schema({
-  _id: {
-    type: Number,
-    required: true
-  },
-  plantName: {
+  plantTypeId: {
     type: String,
     trim: true,
-    required: [true, 'plantName is required']
+    required: [true, 'plantTypeId is required']
+    // intentionally not unique
   },
   growthMultiplier: {
     type: Number,
@@ -20,7 +17,7 @@ const plantTypeSchema = new mongoose.Schema({
   }
 }, {
   versionKey: false,
-  _id: false // disable auto _id generation
+  collection: 'plantType' // Force collection name to be "plantType"
 });
 
 module.exports = mongoose.model('PlantType', plantTypeSchema);
