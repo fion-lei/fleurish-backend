@@ -1,12 +1,15 @@
 const Plant = require('../models/Plant');
 
+// Internal helper to create a plant
 const createPlantInternal = async ({ growth = 0, plantType }) => {
   const plant = await Plant.create({ growth, plantType });
   return plant;
 };
 
+// Create plant (route)
 exports.createPlant = async (req, res) => {
   try {
+    // Accept explicit plantTypeId in body for clarity
     const { growth, plantTypeId } = req.body;
     if (!plantTypeId) return res.status(400).json({ success: false, error: 'plantTypeId is required' });
 
@@ -19,6 +22,7 @@ exports.createPlant = async (req, res) => {
   }
 };
 
+// Get plant by id
 exports.getPlant = async (req, res) => {
   try {
     const plant = await Plant.findById(req.params.plantId).populate('plantType');
@@ -35,7 +39,7 @@ exports.getPlant = async (req, res) => {
 exports.updatePlant = async (req, res) => {
   try {
     const updates = {};
-
+    // Allow explicit plantTypeId in update body
     if (req.body.growth !== undefined) updates.growth = req.body.growth;
     if (req.body.plantTypeId !== undefined) updates.plantType = req.body.plantTypeId;
 
