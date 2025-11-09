@@ -1,34 +1,34 @@
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const Garden = require('../models/Garden');
-const Plot = require('../models/Plot');
-const Plant = require('../models/Plant');
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const Garden = require("../models/Garden");
+const Plot = require("../models/Plot");
+const Plant = require("../models/Plant");
 
 const protect = async (req, res, next) => {
   let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
-      token = req.headers.authorization.split(' ')[1];
+      token = req.headers.authorization.split(" ")[1];
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-this');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key-change-this");
 
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findById(decoded.id).select("-password");
 
       if (!req.user) {
         return res.status(401).json({
           success: false,
-          error: 'User not found'
+          error: "User not found",
         });
       }
 
       next();
     } catch (error) {
-      console.error('Auth middleware error:', error);
+      console.error("Auth middleware error:", error);
       return res.status(401).json({
         success: false,
-        error: 'Not authorized, token failed'
+        error: "Not authorized, token failed",
       });
     }
   }
@@ -36,7 +36,7 @@ const protect = async (req, res, next) => {
   if (!token) {
     return res.status(401).json({
       success: false,
-      error: 'Not authorized, no token'
+      error: "Not authorized, no token",
     });
   }
 };
@@ -48,14 +48,14 @@ exports.register = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { email, password } = req.body;
+    const { email, password, communityId } = req.body;
 
     if (!email || !password) {
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'Please provide email and password'
+        error: "Please provide email and password",
       });
     }
 
@@ -65,7 +65,7 @@ exports.register = async (req, res) => {
       session.endSession();
       return res.status(400).json({
         success: false,
-        error: 'User with this email already exists'
+        error: "User with this email already exists",
       });
     }
 
@@ -74,8 +74,8 @@ exports.register = async (req, res) => {
         {
           row: 0,
           column: 0,
-          plant: null
-        }
+          plant: null,
+        },
       ],
       { session }
     );
@@ -83,8 +83,8 @@ exports.register = async (req, res) => {
     const [garden] = await Garden.create(
       [
         {
-          plots: [plot._id]
-        }
+          plots: [plot._id],
+        },
       ],
       { session }
     );
@@ -96,8 +96,9 @@ exports.register = async (req, res) => {
           password,
           gems: 0,
           coins: 0,
-          gardenId: garden._id
-        }
+          gardenId: garden._id,
+          communityId: communityId || null,
+        },
       ],
       { session }
     );
@@ -116,9 +117,10 @@ exports.register = async (req, res) => {
           email: newUser.email,
           gems: newUser.gems,
           coins: newUser.coins,
-          gardenId: newUser.gardenId
-        }
-      }
+          gardenId: newUser.gardenId,
+          communityId: newUser.communityId,
+        },
+      },
     });
   } catch (error) {
     // Only abort if transaction is still active
@@ -126,11 +128,11 @@ exports.register = async (req, res) => {
       await session.abortTransaction();
     }
     session.endSession();
-    console.error('Register error:', error);
+    console.error("Register error:", error);
     res.status(500).json({
       success: false,
-      error: 'Error creating user',
-      message: error.message
+      error: "Error creating user",
+      message: error.message,
     });
   }
 };
@@ -142,16 +144,16 @@ exports.login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        error: 'Please provide email and password'
+        error: "Please provide email and password",
       });
     }
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid credentials'
+        error: "Invalid credentials",
       });
     }
 
@@ -160,7 +162,7 @@ exports.login = async (req, res) => {
     if (!isPasswordMatch) {
       return res.status(401).json({
         success: false,
-        error: 'Invalid credentials'
+        error: "Invalid credentials",
       });
     }
 
@@ -175,34 +177,32 @@ exports.login = async (req, res) => {
           email: user.email,
           gems: user.gems,
           coins: user.coins,
-          gardenId: user.gardenId
-        }
-      }
+          gardenId: user.gardenId,
+        },
+      },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      error: 'Error logging in',
-      message: error.message
+      error: "Error logging in",
+      message: error.message,
     });
   }
 };
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
-      .populate('gardenId');
+    const user = await User.findById(req.user._id).populate("gardenId");
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: "User not found",
       });
     }
 
-    const plants = await Plant.find({ userId: user._id })
-      .populate('plantType');
+    const plants = await Plant.find({ userId: user._id }).populate("plantType");
 
     res.status(200).json({
       success: true,
@@ -215,17 +215,17 @@ exports.getMe = async (req, res) => {
           gardenId: user.gardenId,
           communityId: user.communityId,
           createdAt: user.createdAt,
-          updatedAt: user.updatedAt
+          updatedAt: user.updatedAt,
         },
-        plants: plants
-      }
+        plants: plants,
+      },
     });
   } catch (error) {
-    console.error('GetMe error:', error);
+    console.error("GetMe error:", error);
     res.status(500).json({
       success: false,
-      error: 'Error fetching user data',
-      message: error.message
+      error: "Error fetching user data",
+      message: error.message,
     });
   }
 };
@@ -234,26 +234,26 @@ exports.getMe = async (req, res) => {
 // GET /api/users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({}, '_id gardenId communityId coins gems');
+    const users = await User.find({}, "_id gardenId communityId coins gems");
 
     res.status(200).json({
       success: true,
       data: {
-        users: users.map(user => ({
+        users: users.map((user) => ({
           userId: user._id,
           gardenId: user.gardenId,
           communityId: user.communityId,
           coins: user.coins,
-          gems: user.gems
-        }))
-      }
+          gems: user.gems,
+        })),
+      },
     });
   } catch (error) {
-    console.error('getAllUsers error:', error);
+    console.error("getAllUsers error:", error);
     res.status(500).json({
       success: false,
-      error: 'Error fetching users',
-      message: error.message
+      error: "Error fetching users",
+      message: error.message,
     });
   }
 };
@@ -267,27 +267,23 @@ exports.addCoins = async (req, res) => {
     if (!userId || amount === undefined) {
       return res.status(400).json({
         success: false,
-        error: 'userId and amount are required'
+        error: "userId and amount are required",
       });
     }
 
     if (amount <= 0) {
       return res.status(400).json({
         success: false,
-        error: 'Amount must be greater than 0'
+        error: "Amount must be greater than 0",
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $inc: { coins: amount } },
-      { new: true }
-    );
+    const user = await User.findByIdAndUpdate(userId, { $inc: { coins: amount } }, { new: true });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: "User not found",
       });
     }
 
@@ -295,15 +291,15 @@ exports.addCoins = async (req, res) => {
       success: true,
       data: {
         userId: user._id,
-        coins: user.coins
-      }
+        coins: user.coins,
+      },
     });
   } catch (error) {
-    console.error('addCoins error:', error);
+    console.error("addCoins error:", error);
     return res.status(500).json({
       success: false,
-      error: 'Error adding coins',
-      message: error.message
+      error: "Error adding coins",
+      message: error.message,
     });
   }
 };
@@ -318,28 +314,24 @@ exports.removeCoins = async (req, res) => {
     if (!userId || amount === undefined) {
       return res.status(400).json({
         success: false,
-        error: 'userId and amount are required'
+        error: "userId and amount are required",
       });
     }
 
     if (amount <= 0) {
       return res.status(400).json({
         success: false,
-        error: 'Amount must be greater than 0'
+        error: "Amount must be greater than 0",
       });
     }
 
     // Atomic: only update if user has enough coins
-    const user = await User.findOneAndUpdate(
-      { _id: userId, coins: { $gte: amount } },
-      { $inc: { coins: -amount } },
-      { new: true }
-    );
+    const user = await User.findOneAndUpdate({ _id: userId, coins: { $gte: amount } }, { $inc: { coins: -amount } }, { new: true });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        error: 'User not found or insufficient coins'
+        error: "User not found or insufficient coins",
       });
     }
 
@@ -347,15 +339,15 @@ exports.removeCoins = async (req, res) => {
       success: true,
       data: {
         userId: user._id,
-        coins: user.coins
-      }
+        coins: user.coins,
+      },
     });
   } catch (error) {
-    console.error('removeCoins error:', error);
+    console.error("removeCoins error:", error);
     return res.status(500).json({
       success: false,
-      error: 'Error removing coins',
-      message: error.message
+      error: "Error removing coins",
+      message: error.message,
     });
   }
 };
@@ -370,27 +362,23 @@ exports.addGems = async (req, res) => {
     if (!userId || amount === undefined) {
       return res.status(400).json({
         success: false,
-        error: 'userId and amount are required'
+        error: "userId and amount are required",
       });
     }
 
     if (amount <= 0) {
       return res.status(400).json({
         success: false,
-        error: 'Amount must be greater than 0'
+        error: "Amount must be greater than 0",
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $inc: { gems: amount } },
-      { new: true }
-    );
+    const user = await User.findByIdAndUpdate(userId, { $inc: { gems: amount } }, { new: true });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        error: "User not found",
       });
     }
 
@@ -398,15 +386,15 @@ exports.addGems = async (req, res) => {
       success: true,
       data: {
         userId: user._id,
-        gems: user.gems
-      }
+        gems: user.gems,
+      },
     });
   } catch (error) {
-    console.error('addGems error:', error);
+    console.error("addGems error:", error);
     return res.status(500).json({
       success: false,
-      error: 'Error adding gems',
-      message: error.message
+      error: "Error adding gems",
+      message: error.message,
     });
   }
 };
@@ -421,28 +409,24 @@ exports.removeGems = async (req, res) => {
     if (!userId || amount === undefined) {
       return res.status(400).json({
         success: false,
-        error: 'userId and amount are required'
+        error: "userId and amount are required",
       });
     }
 
     if (amount <= 0) {
       return res.status(400).json({
         success: false,
-        error: 'Amount must be greater than 0'
+        error: "Amount must be greater than 0",
       });
     }
 
     // Atomic: only update if user has enough gems
-    const user = await User.findOneAndUpdate(
-      { _id: userId, gems: { $gte: amount } },
-      { $inc: { gems: -amount } },
-      { new: true }
-    );
+    const user = await User.findOneAndUpdate({ _id: userId, gems: { $gte: amount } }, { $inc: { gems: -amount } }, { new: true });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        error: 'User not found or insufficient gems'
+        error: "User not found or insufficient gems",
       });
     }
 
@@ -450,15 +434,15 @@ exports.removeGems = async (req, res) => {
       success: true,
       data: {
         userId: user._id,
-        gems: user.gems
-      }
+        gems: user.gems,
+      },
     });
   } catch (error) {
-    console.error('removeGems error:', error);
+    console.error("removeGems error:", error);
     return res.status(500).json({
       success: false,
-      error: 'Error removing gems',
-      message: error.message
+      error: "Error removing gems",
+      message: error.message,
     });
   }
 };
