@@ -6,7 +6,7 @@ const plantSchema = new mongoose.Schema({
     default: 0
   },
   plantType: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Number,
     ref: 'PlantType',
     required: [true, 'plantType is required']
   }
