@@ -1,5 +1,6 @@
 const Task = require("../models/Task");
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const taskDescriptions = require("../../assets/taskDescriptions.json");
 
 // Create a new task
@@ -14,11 +15,11 @@ exports.createTask = async (req, res) => {
       });
     }
 
-    // Pick a random task description from the JSON file
-    const randomDescription = taskDescriptions.litterTasks[Math.floor(Math.random() * taskDescriptions.litterTasks.length)];
+    const randomIndex = crypto.randomInt(0, taskDescriptions.litterTasks.length);
+    const randomDescription = taskDescriptions.litterTasks[randomIndex];
 
-    // Randomize task points between 5 and 15
-    const randomPoints = Math.floor(Math.random() * 11) + 5;  
+    // Randomize task points between 5 and 15 using crypto for better randomness
+    const randomPoints = crypto.randomInt(5, 16); // 16 is exclusive, so max is 15
 
     const task = await Task.create({
       taskName: "Pick up litter",
@@ -39,6 +40,34 @@ exports.createTask = async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message || "Failed to create task",
+    });
+  }
+};
+
+// Get all tasks by community ID
+exports.getTasksByCommunity = async (req, res) => {
+  try {
+    const { communityId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(communityId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid community ID",
+      });
+    }
+
+    const tasks = await Task.find({ communityId }).populate("requestUserId", "email").populate("completedUserId", "email").sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: tasks.length,
+      data: tasks,
+    });
+  } catch (error) {
+    console.error("Error fetching tasks by community:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to fetch tasks",
     });
   }
 };
