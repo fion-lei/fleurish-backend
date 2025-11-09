@@ -15,14 +15,17 @@ exports.createPlantType = async (req, res) => {
   }
 };
 
-// Get plant type by id (Mongo _id)
+// Get plant type by id (numeric _id)
 exports.getPlantType = async (req, res) => {
   try {
-    const pt = await PlantType.findById(req.params.plantTypeId);
+    const plantTypeId = Number(req.params.plantTypeId);
+    if (isNaN(plantTypeId)) {
+      return res.status(400).json({ success: false, error: 'plantTypeId must be a number' });
+    }
+    
+    const pt = await PlantType.findById(plantTypeId);
     if (!pt) return res.status(404).json({ success: false, error: 'PlantType not found' });
-    const out = pt.toObject();
-    out.plantTypeMongoId = out._id;
-    res.status(200).json({ success: true, data: out });
+    res.status(200).json({ success: true, data: pt });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
