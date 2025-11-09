@@ -1,4 +1,4 @@
-const { updateUserPlantsGrowth } = require('../services/growthService');
+const { updateUserPlantsGrowth } = require("../services/growthService");
 
 /**
  * Update growth for all planted plants belonging to a user
@@ -12,7 +12,7 @@ exports.updateGrowth = async (req, res) => {
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'userId is required'
+        error: "userId is required",
       });
     }
 
@@ -21,15 +21,13 @@ exports.updateGrowth = async (req, res) => {
     res.status(200).json({
       success: true,
       plantsGrowthUpdates: plantsUpdated,
-      message: plantsUpdated.length > 0 
-        ? `${plantsUpdated.length} plant(s) updated` 
-        : 'No plants ready for growth update'
+      message: plantsUpdated.length > 0 ? `${plantsUpdated.length} plant(s) updated` : "No plants ready for growth update",
     });
   } catch (error) {
-    console.error('Error updating growth:', error);
+    console.error("Error updating growth:", error);
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to update plant growth'
+      error: error.message || "Failed to update plant growth",
     });
   }
 };

@@ -1,8 +1,8 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { updateGrowth } = require('../controllers/growthController');
+const { updateGrowth } = require("../controllers/growthController");
 
 // Update growth for all planted plants of a user
-router.post('/update/:userId', updateGrowth);
+router.post("/update/:userId", updateGrowth);
 
 module.exports = router;

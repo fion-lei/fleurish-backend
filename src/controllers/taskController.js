@@ -217,11 +217,7 @@ exports.completeTask = async (req, res) => {
     }
 
     // Add task points to user's gems
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $inc: { gems: task.taskPoints } },
-      { new: true }
-    );
+    const user = await User.findByIdAndUpdate(userId, { $inc: { gems: task.taskPoints } }, { new: true });
 
     if (!user) {
       return res.status(404).json({

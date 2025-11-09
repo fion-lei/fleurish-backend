@@ -1,5 +1,5 @@
-const Plant = require('../models/Plant');
-const PlantType = require('../models/PlantType');
+const Plant = require("../models/Plant");
+const PlantType = require("../models/PlantType");
 
 /**
  * Update growth for all planted plants belonging to a user based on time elapsed
@@ -9,11 +9,11 @@ const PlantType = require('../models/PlantType');
 exports.updateUserPlantsGrowth = async (userId) => {
   try {
     // Find all planted plants for this user
-    const plants = await Plant.find({ 
-      userId, 
+    const plants = await Plant.find({
+      userId,
       isPlanted: true,
-      growth: { $lt: 100 } // Only update plants that haven't reached max growth
-    }).populate('plantType');
+      growth: { $lt: 100 }, // Only update plants that haven't reached max growth
+    }).populate("plantType");
 
     if (!plants || plants.length === 0) {
       return [];
@@ -34,11 +34,11 @@ exports.updateUserPlantsGrowth = async (userId) => {
       // Growth rate: 100 growth points per minute for growthMultiplier = 1.0
       // Formula: (100 growth points / 1 minute) * growthMultiplier * timeElapsedMinutes
       const growthIncrease = (100 / 1) * plant.plantType.growthMultiplier * timeElapsedMinutes;
-      
+
       // Update growth (capped at 100)
       plant.growth = Math.min(100, plant.growth + growthIncrease);
       plant.lastGrowthUpdate = now;
-      
+
       await plant.save(); // This will trigger the pre-save hook to update growthStage
 
       // Only include plants that actually changed stage or reached max
@@ -47,14 +47,14 @@ exports.updateUserPlantsGrowth = async (userId) => {
           plantId: plant._id,
           oldStage,
           newStage: plant.growthStage,
-          growth: plant.growth
+          growth: plant.growth,
         });
       }
     }
 
     return updatedPlants;
   } catch (error) {
-    console.error('Error updating plant growth:', error);
+    console.error("Error updating plant growth:", error);
     throw error;
   }
 };
@@ -66,27 +66,28 @@ exports.updateUserPlantsGrowth = async (userId) => {
  */
 exports.getGardenGrowthStatus = async (plotIds) => {
   try {
-    const Plot = require('../models/Plot');
-    
-    const plots = await Plot.find({ _id: { $in: plotIds } })
-      .populate({
-        path: 'plant',
-        populate: { path: 'plantType' }
-      });
+    const Plot = require("../models/Plot");
 
-    return plots.map(plot => ({
+    const plots = await Plot.find({ _id: { $in: plotIds } }).populate({
+      path: "plant",
+      populate: { path: "plantType" },
+    });
+
+    return plots.map((plot) => ({
       plotId: plot._id,
       row: plot.row,
       column: plot.column,
-      plant: plot.plant ? {
-        plantId: plot.plant._id,
-        growth: plot.plant.growth,
-        growthStage: plot.plant.growthStage,
-        plantType: plot.plant.plantType
-      } : null
+      plant: plot.plant
+        ? {
+            plantId: plot.plant._id,
+            growth: plot.plant.growth,
+            growthStage: plot.plant.growthStage,
+            plantType: plot.plant.plantType,
+          }
+        : null,
     }));
   } catch (error) {
-    console.error('Error getting garden growth status:', error);
+    console.error("Error getting garden growth status:", error);
     throw error;
   }
 };
