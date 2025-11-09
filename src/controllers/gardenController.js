@@ -60,6 +60,8 @@ exports.getGardenGrowthStatus = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
+  }
+};
 
 exports.updateGardenName = async (req, res) => {
   try {
@@ -68,41 +70,37 @@ exports.updateGardenName = async (req, res) => {
     if (!gardenName) {
       return res.status(400).json({
         success: false,
-        error: 'gardenName is required'
+        error: "gardenName is required",
       });
     }
 
     if (gardenName.trim().length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'gardenName cannot be empty'
+        error: "gardenName cannot be empty",
       });
     }
 
-    const garden = await Garden.findByIdAndUpdate(
-      req.params.gardenId,
-      { gardenName: gardenName.trim() },
-      { new: true, runValidators: true }
-    ).populate({
-      path: 'plots',
-      populate: { path: 'plant', populate: { path: 'plantType' } }
+    const garden = await Garden.findByIdAndUpdate(req.params.gardenId, { gardenName: gardenName.trim() }, { new: true, runValidators: true }).populate({
+      path: "plots",
+      populate: { path: "plant", populate: { path: "plantType" } },
     });
 
     if (!garden) {
       return res.status(404).json({
         success: false,
-        error: 'Garden not found'
+        error: "Garden not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: garden
+      data: garden,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 };
