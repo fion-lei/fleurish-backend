@@ -16,7 +16,8 @@ const plantTypeSchema = new mongoose.Schema({
     required: [true, 'price is required']
   }
 }, {
-  versionKey: false
+  versionKey: false,
+  collection: 'plantType' // Force collection name to be "plantType"
 });
 
 module.exports = mongoose.model('PlantType', plantTypeSchema);
