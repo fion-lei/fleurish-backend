@@ -1,4 +1,5 @@
 const Task = require("../models/Task");
+const User = require("../models/User");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const taskDescriptions = require("../../assets/taskDescriptions.json");
@@ -214,10 +215,28 @@ exports.completeTask = async (req, res) => {
       });
     }
 
+    // Add task points to user's gems
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $inc: { gems: task.taskPoints } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: "Task marked as completed",
       data: task,
+      user: {
+        id: user._id,
+        gems: user.gems,
+      },
     });
   } catch (error) {
     console.error("Error completing task:", error);
