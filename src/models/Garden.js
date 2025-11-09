@@ -2,6 +2,12 @@
 const mongoose = require('mongoose');
 
 const gardenSchema = new mongoose.Schema({
+  gardenName: {
+    type: String,
+    default: 'My Garden',
+    trim: true,
+    maxlength: [50, 'Garden name cannot exceed 50 characters']
+  },
   plots: [
     {
       type: mongoose.Schema.Types.ObjectId,
