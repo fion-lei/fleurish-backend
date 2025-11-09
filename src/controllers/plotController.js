@@ -23,9 +23,8 @@ exports.createPlot = async (req, res) => {
   const cleanPlant = plantId ? String(plantId).replace(/['"]+/g, '') : plantId;
   const plot = await createPlotInternal({ row: numRow, column: numColumn, plantId: cleanPlant });
     await plot.populate({ path: 'plant', populate: { path: 'plantType' } });
-    const out = plot.toObject();
-    out.plotId = out._id;
-    res.status(201).json({ success: true, data: out });
+  
+    res.status(201).json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -36,8 +35,6 @@ exports.getPlot = async (req, res) => {
   try {
   const plot = await Plot.findById(req.params.plotId).populate({ path: 'plant', populate: { path: 'plantType' } });
     if (!plot) return res.status(404).json({ success: false, error: 'Plot not found' });
-    const out = plot.toObject();
-    out.plotId = out._id;
     res.status(200).json({ success: true, data: out });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -53,9 +50,7 @@ exports.updatePlot = async (req, res) => {
     });
   const plot = await Plot.findByIdAndUpdate(req.params.plotId, updates, { new: true }).populate({ path: 'plant', populate: { path: 'plantType' } });
     if (!plot) return res.status(404).json({ success: false, error: 'Plot not found' });
-    const out = plot.toObject();
-    out.plotId = out._id;
-    res.status(200).json({ success: true, data: out });
+    res.status(200).json({ success: true, data: plot});
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
