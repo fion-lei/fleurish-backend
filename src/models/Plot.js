@@ -9,9 +9,10 @@ const plotSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Column is required']
   },
-  plantId: {
-    type: String,
-    trim: true
+  plant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Plant',
+    default: null
   }
 }, { 
   versionKey: false  // This removes the __v field

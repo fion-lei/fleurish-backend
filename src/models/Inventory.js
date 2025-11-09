@@ -15,7 +15,8 @@ const inventorySchema = new mongoose.Schema({
     }
   ]
 }, {
-  timestamps: true
+  timestamps: true,
+  versionKey: false
 });
 
 module.exports = mongoose.model('Inventory', inventorySchema);
