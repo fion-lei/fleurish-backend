@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Garden = require('../models/Garden');
-const Inventory = require('../models/Inventory');
 const Plot = require('../models/Plot');
 
 exports.createUser = async (req, res) => {
@@ -44,18 +43,7 @@ exports.createUser = async (req, res) => {
       { session }
     );
 
-    // Create Inventory
-    const [inventory] = await Inventory.create(
-      [
-        {
-          seedArray: [],
-          harvestArray: []
-        }
-      ],
-      { session }
-    );
-
-    // Create User referencing Garden & Inventory
+    // Create User referencing Garden
     const [newUser] = await User.create(
       [
         {
@@ -63,7 +51,6 @@ exports.createUser = async (req, res) => {
           gems: 0,
           coins: 0,
           gardenId: garden._id,
-          inventoryId: inventory._id
         }
       ],
       { session }
@@ -78,9 +65,6 @@ exports.createUser = async (req, res) => {
     const gardenOut = garden.toObject();
     gardenOut.gardenId = gardenOut._id;
 
-    const inventoryOut = inventory.toObject();
-    inventoryOut.inventoryId = inventoryOut._id;
-
     return res.status(201).json({
       success: true,
       data: {
@@ -91,7 +75,6 @@ exports.createUser = async (req, res) => {
           coins: userOut.coins
         },
         garden: gardenOut,
-        inventory: inventoryOut,
       }
     });
   } catch (error) {
