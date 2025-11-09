@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Garden = require('../models/Garden');
 const Inventory = require('../models/Inventory');
+const Plot = require('../models/Plot');
 
 exports.createUser = async (req, res) => {
   const session = await mongoose.startSession();
@@ -21,27 +22,50 @@ exports.createUser = async (req, res) => {
       });
     }
 
-    // Create Garden
+    // create initial plot
+    const [plot] = await Plot.create(
+      [
+        {
+          row: 0,
+          column: 0,
+          plantID: null
+        }
+      ],
+      { session }
+    );
+
+    // Create Garden with this plot
     const [garden] = await Garden.create(
-      [{ plots: [] }],
+      [
+        {
+          plots: [plot._id]
+        }
+      ],
       { session }
     );
 
     // Create Inventory
     const [inventory] = await Inventory.create(
-      [{ seedArray: [], harvestArray: [] }],
+      [
+        {
+          seedArray: [],
+          harvestArray: []
+        }
+      ],
       { session }
     );
 
-    // new user 
+    // Create User referencing Garden & Inventory
     const [newUser] = await User.create(
-      [{
-        email,
-        gems: 0,
-        coins: 0,
-        gardenId: garden._id,
-        inventoryId: inventory._id
-      }],
+      [
+        {
+          email,
+          gems: 0,
+          coins: 0,
+          gardenId: garden._id,
+          inventoryId: inventory._id
+        }
+      ],
       { session }
     );
 
@@ -50,8 +74,10 @@ exports.createUser = async (req, res) => {
 
     const userOut = newUser.toObject();
     userOut.userId = userOut._id;
+
     const gardenOut = garden.toObject();
     gardenOut.gardenId = gardenOut._id;
+
     const inventoryOut = inventory.toObject();
     inventoryOut.inventoryId = inventoryOut._id;
 
@@ -65,7 +91,7 @@ exports.createUser = async (req, res) => {
           coins: userOut.coins
         },
         garden: gardenOut,
-        inventory: inventoryOut
+        inventory: inventoryOut,
       }
     });
   } catch (error) {

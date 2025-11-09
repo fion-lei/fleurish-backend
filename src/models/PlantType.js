@@ -1,11 +1,9 @@
 const mongoose = require('mongoose');
 
 const plantTypeSchema = new mongoose.Schema({
-  plantTypeId: {
+  plantName: {
     type: String,
-    trim: true,
-    required: [true, 'plantTypeId is required']
-    // intentionally not unique
+    trim: true
   },
   growthMultiplier: {
     type: Number,
@@ -17,7 +15,6 @@ const plantTypeSchema = new mongoose.Schema({
   }
 }, {
   versionKey: false,
-  collection: 'plantType' // Force collection name to be "plantType"
 });
 
 module.exports = mongoose.model('PlantType', plantTypeSchema);

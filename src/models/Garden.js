@@ -9,7 +9,7 @@ const gardenSchema = new mongoose.Schema({
     }
   ]
 }, {
-  timestamps: true,
+  timestamps: false,
   versionKey: false
 });
 
