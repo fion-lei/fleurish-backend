@@ -1,5 +1,6 @@
 const Garden = require('../models/Garden');
 const Plot = require('../models/Plot');
+const { getGardenGrowthStatus } = require('../services/growthService');
 
 // Get garden by Mongo _id and populate plots -> plant -> plantType
 exports.getGarden = async (req, res) => {
@@ -41,3 +42,24 @@ exports.addPlot = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+// Get current growth status for all plants in the garden
+exports.getGardenGrowthStatus = async (req, res) => {
+  try {
+    const garden = await Garden.findById(req.params.gardenId);
+    if (!garden) return res.status(404).json({ success: false, error: 'Garden not found' });
+
+    const growthStatus = await getGardenGrowthStatus(garden.plots);
+    
+    res.status(200).json({ 
+      success: true, 
+      data: {
+        gardenId: garden._id,
+        plots: growthStatus
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+

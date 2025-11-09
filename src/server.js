@@ -22,6 +22,7 @@ app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/plants', require('./routes/plantRoutes'));
 app.use('/api/plant-types', require('./routes/plantTypeRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/growth', require('./routes/growthRoutes'));
 
 // Health check route
 app.get('/health', (req, res) => {
