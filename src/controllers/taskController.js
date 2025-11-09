@@ -3,6 +3,7 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const taskDescriptions = require("../../assets/taskDescriptions.json");
+const { updateUserPlantsGrowth } = require("../services/growthService");
 
 // Create a new task
 exports.createTask = async (req, res) => {
@@ -216,17 +217,22 @@ exports.completeTask = async (req, res) => {
     }
 
     // Add task points to user's gems
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $inc: { gems: task.taskPoints } },
-      { new: true }
-    );
+    const user = await User.findByIdAndUpdate(userId, { $inc: { gems: task.taskPoints } }, { new: true });
 
     if (!user) {
       return res.status(404).json({
         success: false,
         error: "User not found",
       });
+    }
+
+    // Update growth for all the user's planted plants
+    let plantsUpdated = [];
+    try {
+      plantsUpdated = await updateUserPlantsGrowth(userId);
+    } catch (growthError) {
+      console.error("Error updating plant growth:", growthError);
+      // Don't fail the task completion if growth update fails
     }
 
     res.status(200).json({
@@ -237,6 +243,7 @@ exports.completeTask = async (req, res) => {
         id: user._id,
         gems: user.gems,
       },
+      plantsGrowthUpdates: plantsUpdated, // Include plants that changed stages
     });
   } catch (error) {
     console.error("Error completing task:", error);
