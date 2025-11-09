@@ -10,9 +10,7 @@ exports.getGarden = async (req, res) => {
     });
 
     if (!garden) return res.status(404).json({ success: false, error: 'Garden not found' });
-    const out = garden.toObject();
-    out.gardenId = out._id;
-    res.status(200).json({ success: true, data: out });
+    res.status(200).json({ success: true, data: garden });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -37,9 +35,8 @@ exports.addPlot = async (req, res) => {
     }
 
     const populated = await Garden.findById(garden._id).populate({ path: 'plots', populate: { path: 'plant', populate: { path: 'plantType' } } });
-    const out = populated.toObject();
-    out.gardenId = out._id;
-    res.status(200).json({ success: true, data: out });
+
+    res.status(200).json({ success: true, data: populated });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
