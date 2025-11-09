@@ -398,4 +398,53 @@ exports.removePlantFromPlot = async (req, res) => {
   }
 };
 
+// Delete plant by plantId
+exports.deletePlant = async (req, res) => {
+  try {
+    const { plantId } = req.params;
+
+    if (!plantId) {
+      return res.status(400).json({
+        success: false,
+        error: "plantId is required",
+      });
+    }
+
+    // Check if plant exists
+    const plant = await Plant.findById(plantId);
+    if (!plant) {
+      return res.status(404).json({
+        success: false,
+        error: "Plant not found",
+      });
+    }
+
+    // Check if plant is currently planted in a plot
+    if (plant.isPlanted) {
+      // Find and clear the plot
+      const plot = await Plot.findOne({ plant: plantId });
+      if (plot) {
+        plot.plant = null;
+        await plot.save();
+      }
+    }
+
+    // Delete the plant
+    await Plant.findByIdAndDelete(plantId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Plant deleted successfully",
+      data: {
+        plantId: plantId,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 module.exports.createPlantInternal = createPlantInternal;
