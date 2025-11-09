@@ -230,6 +230,34 @@ exports.getMe = async (req, res) => {
   }
 };
 
+// Get all users (returns user IDs and garden IDs)
+// GET /api/users
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, '_id gardenId communityId coins gems');
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: users.map(user => ({
+          userId: user._id,
+          gardenId: user.gardenId,
+          communityId: user.communityId,
+          coins: user.coins,
+          gems: user.gems
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('getAllUsers error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching users',
+      message: error.message
+    });
+  }
+};
+
 // coin management
 
 exports.addCoins = async (req, res) => {

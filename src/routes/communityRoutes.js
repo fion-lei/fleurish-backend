@@ -4,6 +4,7 @@ const router = express.Router();
 const {
   getAllCommunities,
   getCommunityById,
+  getCommunityName,
   updateCommunityPoints,
   getTopCommunities,
   getUserCommunityRank,
@@ -14,6 +15,7 @@ const { protect } = require('../controllers/userController');
 // Public routes
 router.get('/', getAllCommunities);
 router.get('/leaderboard/top', getTopCommunities);
+router.post('/name', getCommunityName);
 
 // Protected routes (require authentication)
 router.get('/leaderboard/me', protect, getUserCommunityRank);
